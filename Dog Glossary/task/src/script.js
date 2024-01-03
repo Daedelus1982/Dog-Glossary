@@ -1,6 +1,7 @@
 const dogButton = document.getElementById("button-random-dog");
 const dogBreedButton = document.getElementById("button-show-breed");
 const dogSubBreedButton = document.getElementById("button-show-sub-breed");
+const allBreedsButton = document.getElementById("button-show-all");
 const dogDiv = document.getElementById("content");
 const dogImgElement = document.createElement('img');
 const breedName = document.getElementById("input-breed");
@@ -48,25 +49,48 @@ dogBreedButton.addEventListener("click", () => {
 });
 
 dogSubBreedButton.addEventListener("click", () => {
-    const response = fetchSubBreeds(breedName.value.toLowerCase());
+    showJSON(fetchSubBreeds(breedName.value.toLowerCase()));
+});
+
+allBreedsButton.addEventListener("click", () => {
+   showJSON(JSON.parse(httpGet(`https://dog.ceo/api/breeds/list/all`)));
+});
+
+function showJSON(json) {
     newDogDiv.innerHTML = '';
-    if (response.status === 'error') {
+    if ( json.status === 'error') {
         newDogDiv.insertAdjacentHTML("beforeend", "<p>Breed not found!</p>");
     }
     else {
-        if (response.message.length === 0) {
+        if (json.message.length === 0) {
             newDogDiv.insertAdjacentHTML("beforeend", "<p>No sub-breeds found!</p>");
         } else {
             let list = document.createElement("ol");
-            response.message.forEach((item) => {
+            if (Array.isArray(json.message)) {
+            json.message.forEach((item) => {
                 let newItem = document.createElement("li");
                 newItem.textContent = item;
                 list.appendChild(newItem);
                 newDogDiv.appendChild(list);
-        })}
+            })} else {
+                let allDogs = Object.entries(json.message);
+                allDogs.forEach((item) => {
+                    let newItem = document.createElement("li");
+                    newItem.textContent = item[0];
+                    if (item[1].length > 0) {
+                        let breeditems = document.createElement("ul");
+                        let breedItem = document.createElement("li");
+                        breedItem.textContent = item[1];
+                        breeditems.appendChild(breedItem);
+                        newItem.appendChild(breeditems);
+                    }
+                    list.appendChild(newItem);
+                    newDogDiv.appendChild(list);
+                })
+            }}
     }
     dogDiv.replaceWith(newDogDiv);
-});
+}
 
 function httpGet(theUrl)
 {
